@@ -1,57 +1,72 @@
 import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
 
 xy = np.loadtxt('test_data.csv', unpack=True, delimiter=',', dtype='float32')
 x_data = np.transpose(xy[0:3])  # 한 행에 Z X Y 가 들어감, 즉 test_data.csv 상태 그대로 한 행씩 읽어옴
-y_data = np.transpose(xy[-1])  # 한 행에 Label 이 들어감, np에 의해 test_data.csv 가 전치되어 들어왔으므로 소프트맥스 연산을 위해 이렇게 가져온다
+y_data = np.transpose(xy[3:])  # 한 행에 Label 이 들어감, np에 의해 test_data.csv 가 전치되어 들어왔으므로 소프트맥스 연산을 위해 이렇게 가져온다
 
-print(x_data)
-print(y_data)
+#테스트용 데이터
+test = np.loadtxt('test.csv', unpack=True, delimiter=',', dtype='float32')
+train_data = np.transpose(test[0:3])
 
-X = tf.placeholder("float32", shape = [None, None])  # [None, 3]  >> 행의 크기는 모르지만 열의 크기가 3인 행렬,  [None, None] 해도 무관
-Y = tf.placeholder("float32", shape = [None, None])  # "float" 말고 tf.float32 라고 써도 됨
+print(train_data.shape)
+print('xy.shape :', xy.shape)
+print('x_data shape :', x_data.shape)
+print('y_data shape :', y_data.shape)
 
-W = tf.Variable(tf.zeros([3, 3]))  # 모든 내용이 0인 3x3 행렬,  tf.zeros([binary_Classification 횟수, x_data의 크기])
+print(len(x_data))
+print(len(y_data))
 
+########################
 
+X = tf.placeholder(tf.float32, [None, None])
+Y = tf.placeholder(tf.float32, [None, None])
 
-# # weights & bias for nn layers
-# W1 = tf.Variable(tf.random_normal([1, 20]))
-# b1 = tf.Variable(tf.random_normal([20]))
-# L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
-#
-# W2 = tf.Variable(tf.random_normal([20, 20]))
-# b2 = tf.Variable(tf.random_normal([20]))
-# L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
-#
-# W3 = tf.Variable(tf.random_normal([20, 1]))
-# b3 = tf.Variable(tf.random_normal([1]))
-# hypothesis = tf.matmul(L2, W3) + b3
+W = tf.Variable(tf.zeros([3, 3]))
 
+#softmax 알고리듬 적용
+hypothesis = tf.nn.softmax(tf.matmul(X, W))
 
+# cross-entropy 함수
+cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), reduction_indices=1))
 
-
-# 행렬의 형태 >>  X,Y=[8, 3], W=[3, 3]
-hypothesis = tf.nn.softmax(tf.matmul(X, W))  # 소프트맥스에선 W*x 가 아닌 X*W 이므로 x_data 와 y_data 를 transpose 시켜서 가져온 것이다.
-                                               # 위에서 transpose 를 안하면 그대로 W*X 해도 상관 없지만 결과를 추출할 때 불편해진다
-
-learning_rate = 0.001
-cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), reduction_indices=1)) # reduction_indices 가 1이면 행 기준 합계를 적용한다.
-# cross-entropy cost 함수의 TensorFlow 버전이다. log 함수를 호출하여 hypothesis 를 처리한다. hypothesis는 이미 softmax를 거쳤으므로 0과 1사이의 값만 가진다.
-
-optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
-
-
+learning_rate = 0.1
+train = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
 init = tf.global_variables_initializer()
 
 with tf.Session() as sess:
     sess.run(init)
 
-    for step in range(2001):
-        sess.run(optimizer, feed_dict={X: x_data, Y: y_data})
+    for step in range (2001):
+        sess.run(train, feed_dict={X: x_data, Y: y_data})
+
+        if step % 200 == 0:
+            print (step, sess.run(cost, feed_dict={X:x_data, Y:y_data}))
+            # feed = {X:x_data, Y:y_data}
+            # print ('{:8.6} {:8.6}'.format(sess.run(cost, feed_dict=feed)), sess.run(W))
+
+    print(sess.run(hypothesis, feed_dict={X: train_data}))
+
+########################
 
 
+
+
+
+# 학습 데이터의 그래프를 출력
+z_val, x_val, y_val = [], [], []
+z_val = np.transpose(xy[0])
+x_val = np.transpose(xy[1])
+y_val = np.transpose(xy[2])
+
+plt.plot(x_val, 'go')
+plt.plot(y_val, 'bo')
+plt.plot(z_val, 'ro')
+plt.ylabel('degree')
+plt.xlabel('time')
+# plt.show()
 
 
 
