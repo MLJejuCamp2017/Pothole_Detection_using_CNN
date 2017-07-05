@@ -2,15 +2,16 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 
-xy = np.loadtxt('test_data.csv', unpack=True, delimiter=',', dtype='float32')
+xy = np.loadtxt('Acc_data.csv', unpack=True, delimiter=',', dtype='float32')
 x_data = np.transpose(xy[0:3])  # 한 행에 Z X Y 가 들어감, 즉 test_data.csv 상태 그대로 한 행씩 읽어옴
 y_data = np.transpose(xy[3:])  # 한 행에 Label 이 들어감, np에 의해 test_data.csv 가 전치되어 들어왔으므로 소프트맥스 연산을 위해 이렇게 가져온다
 
-#테스트용 데이터
-test = np.loadtxt('test.csv', unpack=True, delimiter=',', dtype='float32')
+######테스트용 데이터   1
+test = np.loadtxt('test_testtest.csv', unpack=True, delimiter=',', dtype='float32')
 train_data = np.transpose(test[0:3])
-
 print(train_data.shape)
+#########   1
+
 print('xy.shape :', xy.shape)
 print('x_data shape :', x_data.shape)
 print('y_data shape :', y_data.shape)
@@ -18,20 +19,51 @@ print('y_data shape :', y_data.shape)
 print(len(x_data))
 print(len(y_data))
 
-########################
 
-X = tf.placeholder(tf.float32, [None, None])
-Y = tf.placeholder(tf.float32, [None, None])
 
-W = tf.Variable(tf.zeros([3, 3]))
+
+
+########################  2
+
+X = tf.placeholder(tf.float32, [None, 3])
+Y = tf.placeholder(tf.float32, [None, 3])
+
+# W = tf.Variable(tf.zeros([3, 3]))
+
+
+
+W1 = tf.Variable(tf.random_normal([3, 10]))
+b1 = tf.Variable(tf.random_normal([10]))
+L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
+
+W2 = tf.Variable(tf.random_normal([10, 10]))
+b2 = tf.Variable(tf.random_normal([10]))
+L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
+
+W3 = tf.Variable(tf.random_normal([10, 10]))
+b3 = tf.Variable(tf.random_normal([10]))
+L3 = tf.nn.relu(tf.matmul(L2, W3) + b3)
+
+W4 = tf.Variable(tf.random_normal([10, 10]))
+b4 = tf.Variable(tf.random_normal([10]))
+L4 = tf.nn.relu(tf.matmul(L3, W4) + b4)
+
+W5 = tf.Variable(tf.random_normal([10, 3]))
+b5 = tf.Variable(tf.random_normal([3]))
+
+
+
+
+
 
 #softmax 알고리듬 적용
-hypothesis = tf.nn.softmax(tf.matmul(X, W))
+hypothesis = tf.nn.softmax(tf.matmul(L4, W5))
 
 # cross-entropy 함수
-cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), reduction_indices=1))
+# cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), reduction_indices=1))
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=hypothesis, labels=Y))
 
-learning_rate = 0.1
+learning_rate = 0.008
 train = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
 init = tf.global_variables_initializer()
@@ -39,17 +71,17 @@ init = tf.global_variables_initializer()
 with tf.Session() as sess:
     sess.run(init)
 
-    for step in range (2001):
+    for step in range(20000):
         sess.run(train, feed_dict={X: x_data, Y: y_data})
 
         if step % 200 == 0:
-            print (step, sess.run(cost, feed_dict={X:x_data, Y:y_data}))
+            print(step, sess.run(cost, feed_dict={X: x_data, Y: y_data}))
             # feed = {X:x_data, Y:y_data}
             # print ('{:8.6} {:8.6}'.format(sess.run(cost, feed_dict=feed)), sess.run(W))
 
     print(sess.run(hypothesis, feed_dict={X: train_data}))
 
-########################
+########################   2
 
 
 
@@ -67,20 +99,6 @@ plt.plot(z_val, 'ro')
 plt.ylabel('degree')
 plt.xlabel('time')
 # plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
