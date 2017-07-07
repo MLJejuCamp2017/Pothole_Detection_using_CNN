@@ -2,13 +2,13 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 
-xy = np.loadtxt('Acc_data.csv', unpack=True, delimiter=',', dtype='float32')
-x_data = np.transpose(xy[0:3])  # 한 행에 Z X Y 가 들어감, 즉 test_data.csv 상태 그대로 한 행씩 읽어옴
-y_data = np.transpose(xy[3:])  # 한 행에 Label 이 들어감, np에 의해 test_data.csv 가 전치되어 들어왔으므로 소프트맥스 연산을 위해 이렇게 가져온다
+xy = np.loadtxt('gyro_acc.csv', unpack=True, delimiter=',', dtype='float32')
+x_data = np.transpose(xy[0:6])  # 한 행에 Z X Y 가 들어감, 즉 test_data.csv 상태 그대로 한 행씩 읽어옴
+y_data = np.transpose(xy[6:])  # 한 행에 Label 이 들어감, np에 의해 test_data.csv 가 전치되어 들어왔으므로 소프트맥스 연산을 위해 이렇게 가져온다
 
 ######테스트용 데이터   1
-test = np.loadtxt('test_testtest.csv', unpack=True, delimiter=',', dtype='float32')
-train_data = np.transpose(test[0:3])
+test = np.loadtxt('gyro_acc_test.csv', unpack=True, delimiter=',', dtype='float32')
+train_data = np.transpose(test[0:6])
 print(train_data.shape)
 #########   1
 
@@ -25,45 +25,49 @@ print(len(y_data))
 
 ########################  2
 
-X = tf.placeholder(tf.float32, [None, 3])
-Y = tf.placeholder(tf.float32, [None, 3])
+X = tf.placeholder(tf.float32, [None, 6])
+Y = tf.placeholder(tf.float32, [None, 4])
 
 # W = tf.Variable(tf.zeros([3, 3]))
 
 
 
-W1 = tf.Variable(tf.random_normal([3, 10]))
-b1 = tf.Variable(tf.random_normal([10]))
+W1 = tf.Variable(tf.random_normal([6, 20]))
+b1 = tf.Variable(tf.random_normal([20]))
 L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
 
-W2 = tf.Variable(tf.random_normal([10, 10]))
-b2 = tf.Variable(tf.random_normal([10]))
+W2 = tf.Variable(tf.random_normal([20, 20]))
+b2 = tf.Variable(tf.random_normal([20]))
 L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
 
-W3 = tf.Variable(tf.random_normal([10, 10]))
-b3 = tf.Variable(tf.random_normal([10]))
+W3 = tf.Variable(tf.random_normal([20, 20]))
+b3 = tf.Variable(tf.random_normal([20]))
 L3 = tf.nn.relu(tf.matmul(L2, W3) + b3)
 
-W4 = tf.Variable(tf.random_normal([10, 10]))
-b4 = tf.Variable(tf.random_normal([10]))
+W4 = tf.Variable(tf.random_normal([20, 20]))
+b4 = tf.Variable(tf.random_normal([20]))
 L4 = tf.nn.relu(tf.matmul(L3, W4) + b4)
 
-W5 = tf.Variable(tf.random_normal([10, 3]))
-b5 = tf.Variable(tf.random_normal([3]))
+W5 = tf.Variable(tf.random_normal([20, 20]))
+b5 = tf.Variable(tf.random_normal([20]))
+L5 = tf.nn.relu(tf.matmul(L4, W5) + b5)
 
+W6 = tf.Variable(tf.random_normal([20, 4]))
+b6 = tf.Variable(tf.random_normal([4]))
 
 
 
 
 
 #softmax 알고리듬 적용
-hypothesis = tf.nn.softmax(tf.matmul(L4, W5))
+hypothesis = tf.nn.softmax(tf.matmul(L5, W6))
 
 # cross-entropy 함수
 # cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), reduction_indices=1))
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=hypothesis, labels=Y))
 
-learning_rate = 0.008
+learning_rate = 0.5
+
 train = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
 init = tf.global_variables_initializer()
@@ -71,7 +75,7 @@ init = tf.global_variables_initializer()
 with tf.Session() as sess:
     sess.run(init)
 
-    for step in range(20000):
+    for step in range(10000):
         sess.run(train, feed_dict={X: x_data, Y: y_data})
 
         if step % 200 == 0:
@@ -83,7 +87,23 @@ with tf.Session() as sess:
 
 ########################   2
 
+#########################
+    correct_prediction = tf.equal(tf.floor(hypothesis + 0.5), Y)
 
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+    param = [hypothesis, tf.floor(hypothesis + 0.5), correct_prediction, accuracy] # tf.floor(hypothesis + 0.5) >> 0.5 를 더하고 소수점 이하는 버린다
+    result = sess.run(param, feed_dict={X: x_data, Y: y_data})
+
+    print(*result[0])  # hypothesis
+    print(*result[1])  # tf.floor( hypothesis + 0.5)
+    print(*result[2])  # correct_prediction
+    print( result[-1])  # accuracy
+    print('Accuracy : ', accuracy.eval({X: x_data, Y: y_data}))
+
+    print('b1: ', sess.run(b1))
+    print('b2: ', sess.run(b2))
+
+##########################
 
 
 

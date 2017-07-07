@@ -83,23 +83,26 @@ class neuralNetwork:
 
 
 
-input_node = 1500
-hidden_node = 100
-output_node = 3
+input_node = 6
+hidden_node = 50
+output_node = 4
 learningrate = 0.01
 
 test = neuralNetwork(input_node, hidden_node, output_node, learningrate)
 
-trainint_data_file = open("Acc_data.csv", 'r')
+trainint_data_file = open("gyro_acc.csv", 'r')
 trainint_data_list = trainint_data_file.readlines()
 trainint_data_file.close()
 
+print(trainint_data_file)
 for record in trainint_data_list:
 
     all_values = record.split(',')
-    input = numpy.asfarray(all_values[0:3])
+    input = numpy.asfarray(all_values[0:6])
 
     target = numpy.zeros(output_node) + 0.01
     # target[int(all_values[0])] = 0.99
 
     test.train(input, target)
+
+print(input.shape)

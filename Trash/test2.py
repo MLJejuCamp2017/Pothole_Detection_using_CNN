@@ -26,11 +26,11 @@ Y = tf.placeholder(tf.float32, [None, None])
 # W = tf.Variable(tf.zeros([3, 3]))
 
 
-W1 = tf.Variable(tf.random_normal([3, 10]))
-b1 = tf.Variable(tf.random_normal([10]))
+W1 = tf.Variable(tf.random_normal([3, 3]))
+b1 = tf.Variable(tf.random_normal([3]))
 L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
 
-W2 = tf.Variable(tf.random_normal([10, 3]))
+W2 = tf.Variable(tf.random_normal([3, 3]))
 b2 = tf.Variable(tf.random_normal([3]))
 
 
@@ -40,7 +40,7 @@ hypothesis = tf.nn.softmax(tf.matmul(L1, W2))
 # cross-entropy 함수
 cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), reduction_indices=1))
 
-learning_rate = 0.00003
+learning_rate = 0.001
 train = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
 init = tf.global_variables_initializer()
@@ -56,6 +56,4 @@ with tf.Session() as sess:
             # feed = {X:x_data, Y:y_data}
             # print ('{:8.6} {:8.6}'.format(sess.run(cost, feed_dict=feed)), sess.run(W))
 
-    print(sess.run(hypothesis, feed_dict={X: [[-1.1707647,2.7988217,8.635885],
-                                              [-0.7386112,2.9149406,8.511387],
-                                          [-0.17597382,3.0226796,8.456321]]}))
+    print(sess.run(hypothesis, feed_dict={X: train_data}))
