@@ -25,6 +25,6 @@
 import numpy as np
 from scipy.misc import toimage
 
-x = np.loadtxt("/Users/User/PycharmProjects/network/ML_Camp/Porthole_Detection/porthole/original/log9.csv", delimiter=',')
+x = np.loadtxt("/Users/User/PycharmProjects/network/ML_Camp/Porthole_Detection/porthole/original/log.csv", delimiter=',')
 # toimage(x).show()
-toimage(x).save('log9.png')
+toimage(x).save('log.jpg')

@@ -5,17 +5,17 @@ import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # change this as you see fit
-image_path = sys.argv[1]
+# image_path = sys.argv[1] # 콘솔창에서 실행이 안되므로 주석처리 실행 안되는 이유를 모르겠다 ㅠㅠ
 
 # Read in the image_data
-image_data = tf.gfile.FastGFile(image_path, 'rb').read()
+image_data = tf.gfile.FastGFile('C:/tf_files/flower_photos/roses/rose_test.png', 'rb').read() # 수정됨, 경로 지정
 
 # Loads label file, strips off carriage return
 label_lines = [line.rstrip() for line
-               in tf.gfile.GFile("retrained_labels.txt")]
+               in tf.gfile.GFile("/tmp/output_labels.txt")] # 수정됨, 경로지정 해야 에러안남 >> 위에껀 왜 필요한지 모르겠다.
 
 # Unpersists graph from file
-with tf.gfile.FastGFile("retrained_graph.pb", 'rb') as f:
+with tf.gfile.FastGFile("/tmp/output_graph.pb", 'rb') as f: # 수정됨, 경로지정
     graph_def = tf.GraphDef()
     graph_def.ParseFromString(f.read())
     tf.import_graph_def(graph_def, name='')
