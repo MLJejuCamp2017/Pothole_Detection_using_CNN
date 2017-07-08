@@ -8,7 +8,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # image_path = sys.argv[1] # 콘솔창에서 실행이 안되므로 주석처리 실행 안되는 이유를 모르겠다 ㅠㅠ
 
 # Read in the image_data
-image_data = tf.gfile.FastGFile('C:/tf_files/flower_photos/roses/rose_test.png', 'rb').read() # 수정됨, 경로 지정
+image_data = tf.gfile.FastGFile('/Users/User/PycharmProjects/network/ML_Camp/Porthole_Detection/porthole_test.jpg', 'rb').read() # 수정됨, 경로 지정
 
 # Loads label file, strips off carriage return
 label_lines = [line.rstrip() for line
