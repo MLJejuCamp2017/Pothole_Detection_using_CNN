@@ -1,6 +1,7 @@
 import os, sys
 
 import tensorflow as tf
+import cv2
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -9,6 +10,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Read in the image_data
 image_data = tf.gfile.FastGFile('/Users/User/PycharmProjects/network/ML_Camp/Porthole_Detection/porthole_test.jpg', 'rb').read() # 수정됨, 경로 지정
+image = cv2.imread('images/1.jpg')
 
 # Loads label file, strips off carriage return
 label_lines = [line.rstrip() for line
@@ -49,5 +51,6 @@ with tf.Session() as sess:
         score = predictions[0][node_id]
         print('%s (score = %.5f)' % (human_string, score))
 
-        if label_lines[0] == "speedbump":
-            print("gg")
+        # 가장 가능성이 큰 라벨부터 출력(분류) 하므로 모델이 무엇으로 판단했는지 확인
+        # if label_lines[0] == "speedbump":
+        #     print("gg")
