@@ -3,14 +3,6 @@ import os, sys
 import tensorflow as tf
 import cv2
 
-from scipy.misc import toimage  # 각 윈도우를 확인하는 뻘짓용
-import imutils
-import argparse
-import time
-import numpy as np
-from PIL import Image
-import io
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
@@ -18,14 +10,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # image_path = sys.argv[1] # 콘솔창에서 실행이 안되므로 주석처리 실행 안되는 이유를 모르겠다 ㅠㅠ
 
 # 이미지를 byte mode 로 불러들임
-# image_data = tf.gfile.FastGFile('porthole_test.jpg', 'rb').read() # 수정됨, 경로 지정,
+image_data = tf.gfile.FastGFile('/Users/User/PycharmProjects/network/ML_Camp/Porthole_Detection/porthole_test.png', 'rb').read() # 수정됨, 경로 지정,
 
 # Loads label file, strips off carriage return
 label_lines = [line.rstrip() for line
                in tf.gfile.GFile("/tmp/output_labels.txt")] # 수정됨, 경로지정 해야 에러안남 >> 위에껀 왜 필요한지 모르겠다.
-
-
-image = cv2.imread('all.jpg')
 
 
 # 슬라이딩 윈도우를 사용하기 위한 함수
@@ -55,19 +44,16 @@ with tf.Session() as sess:
     # 시간 오래걸리겠다
 
     # 현재 문제점
+    # 1. 이 파일에 윈도우를 어떻게 구현 할 것인가? >> 이건 끝난듯 히히 이제 합치기만 하면 된다.
     # 2. GPS 데이터를 어떻게 기록하고 포트홀일 경우 어떻게 출력하거나 지도에 표시할 것 인가? 이미지파일에 모두 담기엔 조금 그런데;;
     # 3. SensorStream IMU+GPS 어플리케이션을 현재 안드로이드 버전에서 GPS가 작동하게 만들어야 한다. (마그네틱 센서와 GPS 센서 문제)
     # 4. 3번 문제를 해결하기 위해 일단 어플리케이션 코드를 분석해야하는데 김도현 교수님께 한번 여쭤보자
 
-    # 해결된 문제
-    # 1. 이 파일에 윈도우를 어떻게 구현 할 것인가? >> 이건 끝난듯 히히 이제 합치기만 하면 된다. >> JPEG 파일이 아니라고 에러나는거랑 윈도우를 다시 배열로 바꿀 때 길이가 바뀌는걸 해결해야함 >> 해결
-
 
 ############################################################
 
-
+    image = cv2.imread('speedbump_test.jpg')
     (winW, winH) = (3, 128)  # 윈도우의 크기를 정한다
-
 
     # 윈도우가 이미지를 따라 스텝만큼 슬라이딩 한다
     for (x, y, window) in sliding_window(image, stepSize=32, windowSize=(winW, winH)):
@@ -75,46 +61,22 @@ with tf.Session() as sess:
         if window.shape[0] != winH or window.shape[1] != winW:
             continue
 
-        # print(window) # 윈도우는 계속 이동하므로 윈도우 배열은 계속 바뀌고 있다.
-
-        tmp = Image.fromarray(window) # tmp 변수에 window 의 정보를 넣고
-        tmp.save('window.jpg') # window.jpg 파일로 저장
-        tmp.close()
-        # time.sleep(3.0)
-
-        # image_data = tmp.tobytes() # 복제된 윈도우를 바이트 스트링으로 변환
-
-        # 아마도 아래 예측 함수로 넘기기 전에 jpeg로 다시 인코딩 해줘야 하는 것 같다. window를 jpeg로 인코딩 후 다시 바이트스트링으로 바꿔야 할듯
-
-        # 만들어진 window 를 classification 하기위해 원래 동작 방식 처럼 바이트 스트링으로 변환하여 예측 함수로 넘김  근데 윈도우 이미지가 계속 같은 값으로 나온다
-        image_data = tf.gfile.FastGFile('window.jpg', 'rb').read()  # 이 부분을 해결하면 될것같긴 한데
-        # print(image_data)
-
-        predictions = sess.run(softmax_tensor, \
-                               {'DecodeJpeg/contents:0': image_data})
-
         # 슬라이딩 윈도우를 위해 cv2 파일로 불러온 이미지를 윈도우로 쪼갠 후 그 윈도우를 GFile(바이트 모드)로 변환해서 image_data 로 리턴해야 한다.
+        image_data = tf.gfile.FastGFile(window, 'rb').read()  # 이 부분을 해결하면 될것같긴 한데
 
-        # 그냥 윈도우를 그리는 코드
-        clone = image.copy()
-        cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 255, 0), 2)
-        cv2.imshow("Window", clone)
-        cv2.waitKey(1)
-        # time.sleep(0.025)
 
-    ##############################################################
+##############################################################
+
+    predictions = sess.run(softmax_tensor, \
+                           {'DecodeJpeg/contents:0': image_data})
 
     # Sort to show labels of first prediction in order of confidence
-        top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
+    top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
 
-        for node_id in top_k: # 각 라벨마다 node_id 가 정해져 있어서 스코어(확률)이 가장 높은 라벨부터 출력이 된다.
-            human_string = label_lines[node_id]
-            score = predictions[0][node_id]
-            # if human_string == 'porthole': # 해당 라벨만 출력하게 함
-            # print(node_id)  # 각 라벨들의 node_id 출력
-            print('%s (score = %.5f)' % (human_string, score))
-
-        print("--------------------------------------------")
+    for node_id in top_k:
+        human_string = label_lines[node_id]
+        score = predictions[0][node_id]
+        print('%s (score = %.5f)' % (human_string, score))
 
         # 가장 가능성이 큰 라벨부터 출력(분류) 하므로 모델이 무엇으로 판단했는지 확인
         # if label_lines[0] == "speedbump":

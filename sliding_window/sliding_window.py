@@ -36,8 +36,10 @@ for (x, y, window) in sliding_window(image, stepSize=32, windowSize=(winW, winH)
     # toimage(window).save('test.jpg') # 저장하여 윈도우를 확인할 수 있다.
 
     # 그냥 윈도우를 그리는 코드
-    # clone = image.copy()
-    # cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 255, 0), 2)
-    # cv2.imshow("Window", clone)
-    # cv2.waitKey(1)
-    # time.sleep(0.025)
+    clone = image.copy()
+    cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 255, 0), 2)
+    cv2.imshow("Window", clone)
+    cv2.waitKey(1)
+    time.sleep(0.025)
+
+print(window)
