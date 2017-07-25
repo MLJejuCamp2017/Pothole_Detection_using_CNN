@@ -22,10 +22,10 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Loads label file, strips off carriage return
 label_lines = [line.rstrip() for line
-               in tf.gfile.GFile("/tmp(grayscale)/output_labels.txt")] # 수정됨, 경로지정 해야 에러안남 >> 위에껀 왜 필요한지 모르겠다.
+               in tf.gfile.GFile("/tmp/output_labels.txt")] # 수정됨, 경로지정 해야 에러안남 >> 위에껀 왜 필요한지 모르겠다.
 
 
-image = cv2.imread('all(grayscale).jpg')
+image = cv2.imread('all(spectrum).jpg')
 
 
 # 슬라이딩 윈도우를 사용하기 위한 함수
@@ -38,7 +38,7 @@ def sliding_window(image, stepSize, windowSize):
 
 
 # Unpersists graph from file
-with tf.gfile.FastGFile("/tmp(grayscale)/output_graph.pb", 'rb') as f: # 수정됨, 경로지정
+with tf.gfile.FastGFile("/tmp/output_graph.pb", 'rb') as f: # 수정됨, 경로지정
     graph_def = tf.GraphDef()
     graph_def.ParseFromString(f.read())
     tf.import_graph_def(graph_def, name='')
@@ -57,23 +57,25 @@ with tf.Session() as sess:
     # 현재 문제점
     # 2. GPS 데이터를 어떻게 기록하고 포트홀일 경우 어떻게 출력하거나 지도에 표시할 것 인가?
 
+
     # 해결된 문제
     # 1. 이 파일에 윈도우를 어떻게 구현 할 것인가? >> 이건 끝난듯 히히 이제 합치기만 하면 된다. >> JPEG 파일이 아니라고 에러나는거랑 윈도우를 다시 배열로 바꿀 때 길이가 바뀌는걸 해결해야함 >> 해결
 
 
-    ############################################################
+############################################################
 
-
-    (winW, winH) = (3, 500)  # 윈도우의 크기를 정한다, 만약 Input 데이터의 사이즈가 바뀌면 손댈 부분은 여기뿐 3은 이미지의 넓이, 128은 높이이다.
-    # 한반도 각 꼭짓점들의 차이는 위도 경도 둘다 약 3 정도 이다. 이정도면 상관 없나?
+    (winW, winH) = (6, len(image))  # 윈도우의 크기를 정한다, 만약 Input 데이터의 사이즈가 바뀌면 손댈 부분은 여기뿐
+                            # 한반도 각 꼭짓점들의 차이는 위도 경도 둘다 약 3 정도 이다. 이정도면 GPS 데이터를 넣어도 상관 없나?
 
 
     # 윈도우가 이미지를 따라 스텝만큼 슬라이딩 한다
-    for (x, y, window) in sliding_window(image, stepSize=200, windowSize=(winW, winH)):
+    for (x, y, window) in sliding_window(image, stepSize=2, windowSize=(winW, winH)):
         # if the window does not meet our desired window size, ignore it
         if window.shape[0] != winH or window.shape[1] != winW:
             continue
 
+        # print(x, y + 300) # 만약 이미지데이터에 GPS 정보까지 넣는다고 하면 포트홀이 감지되었을 때 Y번째에 있는 GPS 정보를 뽑아내면 될것
+                    # 이건 슬라이딩 윈도우의 위치를 나타낸다(맨 윗 부분의 좌표 출력)
 
         # print(window) # 윈도우는 계속 이동하므로 윈도우 배열은 계속 바뀌고 있다.
 
@@ -102,13 +104,10 @@ with tf.Session() as sess:
         cv2.waitKey(1)
         # time.sleep(0.025)
 
-        ##############################################################
+    ##############################################################
 
-        # Sort to show labels of first prediction in order of confidence
+    # Sort to show labels of first prediction in order of confidence
         top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
-
-        print(y, y + 300) # 만약 이미지데이터에 GPS 정보까지 넣는다고 하면 포트홀이 감지되었을 때 Y번째에 있는 GPS 정보를 뽑아내면 될것
-        # 이건 슬라이딩 윈도우의 위치를 나타낸다(윈도우 아랫부분의 좌표 출력)
 
         for node_id in top_k: # 각 라벨마다 node_id 가 정해져 있어서 스코어(확률)이 가장 높은 라벨부터 출력이 된다.
             human_string = label_lines[node_id]
@@ -119,12 +118,12 @@ with tf.Session() as sess:
 
         print("--------------------------------------------")
 
+'''
+        for node_id in top_k: # 각 라벨마다 node_id 가 정해져 있어서 스코어(확률)이 가장 높은 라벨부터 출력이 된다.
+            human_string = label_lines[node_id]
+            score = predictions[0][node_id]
 
+            print('%s (score = %.5f)' % (human_string, score))
 
-
-
-
-
-
-
-
+        print("--------------------------------------------")
+'''

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-r"""Simple transfer learning with Inception v3 or Mobilenet models.
+"""Simple transfer learning with Inception v3 or Mobilenet models.
 
 With support for TensorBoard.
 
@@ -1184,13 +1184,13 @@ if __name__ == '__main__':
   parser.add_argument(
       '--how_many_training_steps',
       type=int,
-      default=4000,
+      default=20000,  # 4000 default
       help='How many training steps to run before ending.'
   )
   parser.add_argument(
       '--learning_rate',
       type=float,
-      default=0.01,
+      default=0.005,  # 0.01 default
       help='How large a learning rate to use when training.'
   )
   parser.add_argument(
